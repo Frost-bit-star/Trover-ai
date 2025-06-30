@@ -1,37 +1,25 @@
 import PaxSenixAI from '@paxsenix/ai';
 
-const paxsenix = new PaxSenixAI();
+const paxsenix = new PaxSenixAI({
+  apiKey: 'sk-paxsenix-h5_eXrhg7GixWlcynfBz0EP34o9y9DGOuoJhOWTWtCXr4KRv'
+});
 
 const SYSTEM_PROMPT = {
   role: 'system',
-  content: `You are the Troverstar Marketplace AI Assistant. 
-You only respond to questions about the Troverstar platform, including listing items, finding products, handling orders, shipping, or general support. 
-If a user says hello or greets you, respond politely and guide them back to Troverstar-related help. 
-If someone asks something unrelated to Troverstar, politely inform them that you can only assist with Troverstar Marketplace topics.`
+  content: `You are the Troverstar Marketplace AI Assistant. Your job is to help buyers and sellers on the Troverstar platform. 
+You assist with tasks like listing items, finding products, handling orders, shipping questions, and general support. 
+Provide friendly, clear, and useful answers tailored to online marketplace users.`
 };
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
-    res.setHeader('Allow', ['POST']);
-    return res.status(405).end(`Method ${req.method} Not Allowed`);
+    return res.status(405).json({ error: 'Method not allowed' });
   }
 
   const { messages, model } = req.body;
 
   if (!messages || !Array.isArray(messages)) {
     return res.status(400).json({ error: 'Invalid or missing messages array' });
-  }
-
-  const userMessage = messages[messages.length - 1]?.content?.toLowerCase() || '';
-
-  const greetings = ['hi', 'hello', 'hey', 'good morning', 'good afternoon', 'good evening'];
-  if (greetings.includes(userMessage.trim())) {
-    return res.json({
-      response: {
-        role: 'assistant',
-        content: 'Hi, I am the Troverstar Marketplace AI Assistant. How can I help you with your marketplace needs today?'
-      }
-    });
   }
 
   try {
@@ -42,9 +30,9 @@ export default async function handler(req, res) {
       messages: fullMessages,
     });
 
-    res.json({ response: chatResponse.choices[0].message });
+    res.status(200).json({ response: chatResponse.choices[0].message });
   } catch (error) {
-    console.error('PaxSenix AI error:', error.response?.data || error.message || error);
+    console.error('PaxSenix AI error:', error);
     res.status(500).json({ error: 'Something went wrong with PaxSenix AI' });
   }
 }
